@@ -1,0 +1,80 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  TeamContactScheduler
+
+  SAM Template for TeamContactScheduler that checks current date against shift schedules and holidays
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 300
+    MemorySize: 128
+
+Resources:
+  CheckSchedules:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri:
+      Handler: CheckSchedules.lambda_handler
+      Runtime: python3.8
+      Role: arn:aws:iam::651699629044:role/LambdaExecutionRole
+      Description: SAM function to check current date against weekly work shifts and holiday schedule tables in DynamoDB
+      VpcConfig:
+        #SecurityGroupIds:
+        #  - sg-e6d20c8d
+        #SubnetIds:
+        #  - subnet-045dd2ba0ced10d8c
+        #  - subnet-0b05b15e5edfb0620
+
+  Holidays:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        -
+          AttributeName: "h_ID"
+          AttributeType: "N"
+        -
+          AttributeName: "h_date"
+          AttributeType: "S"
+      KeySchema:
+        -
+          AttributeName: "h_ID"
+          KeyType: "HASH"
+        -
+          AttributeName: "h_date"
+          KeyType: "RANGE"
+
+      BillingMode: PAY_PER_REQUEST
+
+  WorkShifts:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        -
+          AttributeName: "shift_ID"
+          AttributeType: "N"
+        -
+          AttributeName: "shift_name"
+          AttributeType: "S"
+      KeySchema:
+        -
+          AttributeName: "shift_ID"
+          KeyType: "HASH"
+        -
+          AttributeName: "shift_name"
+          KeyType: "RANGE"
+      BillingMode: PAY_PER_REQUEST
+#Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  #HelloWorldApi:
+  #  Description: "API Gateway endpoint URL for Prod stage for Hello World function"
+  #  Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
+  #HelloWorldFunction:
+  #  Description: "Hello World Lambda Function ARN"
+  #  Value: !GetAtt HelloWorldFunction.Arn
+  #HelloWorldFunctionIamRole:
+  #  Description: "Implicit IAM Role created for Hello World function"
+  #  Value: !GetAtt HelloWorldFunctionRole.Arn
